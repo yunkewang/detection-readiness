@@ -1,0 +1,56 @@
+id: lateral_movement
+display_name: Lateral Movement Detection
+description: >
+  Detects lateral movement activity where an adversary moves between hosts
+  within a network after initial compromise, typically using remote services
+  like SMB, WMI, PsExec, RDP, or WinRM.
+
+required_data_sources:
+  - endpoint_process
+  - network_traffic
+
+required_fields_by_source:
+  endpoint_process:
+    - process_name
+    - user
+    - dest
+  network_traffic:
+    - src_ip
+    - dest_ip
+    - dest_port
+
+optional_fields_by_source:
+  endpoint_process:
+    - parent_process_name
+    - command_line
+    - hash
+  network_traffic:
+    - protocol
+    - bytes_out
+    - app
+
+preferred_query_mode: datamodel
+fallback_query_mode: raw
+
+scoring_weights:
+  required_data_source: 30.0
+  required_fields: 35.0
+  optional_fields: 10.0
+  preferred_query_mode: 15.0
+  fallback_query_mode: 10.0
+
+remediation_guidance:
+  endpoint_process: >
+    Onboard endpoint process creation logs via Sysmon (Event ID 1), EDR, or
+    Windows Security logs. Ensure the Endpoint datamodel is populated.
+  network_traffic: >
+    Onboard network flow data from firewalls, proxy logs, or Zeek/Bro.
+    Ensure the Network_Traffic datamodel is accelerated.
+  dest: >
+    Ensure destination hostname is available in endpoint events. Map from
+    Computer, dest_host, or ComputerName fields.
+  dest_ip: >
+    Ensure destination IP is parsed from network flow data.
+  dest_port: >
+    Capture destination port to identify lateral movement over known service
+    ports (445/SMB, 135/WMI, 3389/RDP, 5985/WinRM).

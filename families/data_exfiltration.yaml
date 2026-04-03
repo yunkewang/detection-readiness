@@ -1,0 +1,55 @@
+id: data_exfiltration
+display_name: Data Exfiltration Detection
+description: >
+  Detects data exfiltration attempts where an adversary transfers sensitive data
+  out of the network via HTTP/S uploads, DNS tunneling, cloud storage, or
+  abnormal outbound traffic volumes.
+
+required_data_sources:
+  - network_traffic
+
+required_fields_by_source:
+  network_traffic:
+    - src_ip
+    - dest_ip
+    - bytes_out
+
+optional_fields_by_source:
+  network_traffic:
+    - dest_port
+    - protocol
+    - app
+    - url
+    - dns_query
+    - user
+
+preferred_query_mode: datamodel
+fallback_query_mode: raw
+
+scoring_weights:
+  required_data_source: 30.0
+  required_fields: 35.0
+  optional_fields: 10.0
+  preferred_query_mode: 15.0
+  fallback_query_mode: 10.0
+
+remediation_guidance:
+  network_traffic: >
+    Onboard network flow or proxy logs that capture outbound traffic. Firewall
+    logs, proxy logs, or Zeek conn.log are good candidates. Ensure the
+    Network_Traffic datamodel is accelerated.
+  bytes_out: >
+    Ensure outbound byte counts are captured. This is critical for volume-based
+    exfiltration detection. Map from bytes_out, sc_bytes, or SentBytes.
+  src_ip: >
+    Ensure internal source IPs are available to identify which host is
+    generating outbound traffic.
+  dest_ip: >
+    Ensure destination IPs are captured to identify external destinations
+    and correlate with threat intelligence feeds.
+  url: >
+    Capture full or partial URLs from proxy logs to detect exfiltration to
+    cloud storage services (e.g., Dropbox, Google Drive, pastebin).
+  dns_query: >
+    Capture DNS query data to detect DNS tunneling exfiltration techniques.
+    Ensure the DNS datamodel or raw DNS logs are available.

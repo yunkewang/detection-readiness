@@ -42,6 +42,9 @@ def test_list_all_families():
         "impossible_travel",
         "suspicious_process_execution",
         "email_impersonation",
+        "lateral_movement",
+        "data_exfiltration",
+        "privilege_escalation",
     }
 
 
