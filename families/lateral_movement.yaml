@@ -1,0 +1,36 @@
+id: lateral_movement
+display_name: Lateral Movement Detection
+description: Detects potential lateral movement using authentication and endpoint telemetry.
+required_data_sources:
+  - azure_ad_signin
+  - endpoint_process
+required_fields_by_source:
+  azure_ad_signin:
+    - user
+    - src_ip
+    - result
+    - location
+  endpoint_process:
+    - user
+    - process_name
+    - parent_process
+    - host
+optional_fields_by_source:
+  azure_ad_signin:
+    - app
+    - user_agent
+  endpoint_process:
+    - command_line
+    - process_hash
+preferred_query_mode: datamodel
+fallback_query_mode: raw
+scoring_weights:
+  required_data_source: 30.0
+  required_fields: 35.0
+  optional_fields: 10.0
+  preferred_query_mode: 15.0
+  fallback_query_mode: 10.0
+remediation_guidance:
+  azure_ad_signin: Onboard Entra ID sign-in logs and map user/src_ip/location fields.
+  endpoint_process: Ensure endpoint process telemetry is normalized with user/process/host fields.
+  datamodel: Enable and maintain Authentication and Endpoint datamodel acceleration.

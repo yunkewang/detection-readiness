@@ -19,7 +19,7 @@ This is **not** a chatbot, not a Splunk app, and not a generic AI wrapper. It is
 ## Features
 
 - **Environment profile input** — Describe your Splunk environment in YAML or JSON (data sources, indexes, fields, coverage, query modes, constraints)
-- **Detection family assessment** — Assess readiness against structured detection families (password spray, impossible travel, suspicious process execution, email impersonation)
+- **Detection family assessment** — Assess readiness against structured detection families (password spray, impossible travel, suspicious process execution, email impersonation, lateral movement, data exfiltration)
 - **Deterministic scoring** — Repeatable 0–100 scoring with clear status (ready / partially_ready / not_ready)
 - **Human-readable explanations** — Template-based short and detailed reports (no LLM dependency)
 - **Machine-readable JSON output** — Structured results for pipelines and integrations
@@ -62,6 +62,12 @@ detection-readiness list-families
 
 ```bash
 detection-readiness validate-profile --profile examples/azure_profile.yaml
+```
+
+### Run datamodel health checks
+
+```bash
+detection-readiness check-datamodels --profile examples/azure_profile.yaml
 ```
 
 ### Auto-generate a profile from sample events
@@ -216,17 +222,17 @@ pytest tests/ -v
 - Sample event scanning supports JSON, JSONL, and CSV inputs (no direct Splunk export adapters yet)
 - Explanation generation is template-based (no AI narratives)
 - No web UI
-- Limited to four starter detection families
+- No direct Splunk content factory integration yet
 
 ## Roadmap
 
 - [ ] Splunk REST API integration for live environment profiling
 - [x] Sample-event-based field discovery (JSON/JSONL-driven coverage inference)
-- [ ] Datamodel health checks
+- [x] Datamodel health checks
 - [x] Environment profile auto-generation (CLI: `generate-profile`)
 - [ ] Content factory integration (generate SPL from readiness results)
 - [ ] AI-generated narrative summaries (optional)
-- [ ] Additional detection families (lateral movement, data exfiltration, etc.)
+- [x] Additional detection families (lateral movement, data exfiltration, etc.)
 
 ## License
 

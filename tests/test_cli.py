@@ -62,6 +62,18 @@ def test_validate_profile():
     assert "valid" in result.output.lower()
 
 
+def test_check_datamodels():
+    result = runner.invoke(
+        app,
+        [
+            "check-datamodels",
+            "--profile", str(EXAMPLES_DIR / "azure_profile.yaml"),
+        ],
+    )
+    assert result.exit_code == 0
+    assert "Datamodel Health Check" in result.output
+
+
 def test_validate_bad_profile(tmp_path):
     bad = tmp_path / "bad.txt"
     bad.write_text("hello")

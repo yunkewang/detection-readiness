@@ -31,6 +31,18 @@ class DatamodelInfo(BaseModel):
     """Describes the availability of a CIM datamodel."""
 
     available: bool = False
+    acceleration_enabled: bool = False
+    acceleration_lag_hours: float = Field(
+        default=0.0,
+        ge=0.0,
+        description="Estimated lag in hours for acceleration summaries.",
+    )
+    health_score: float = Field(
+        default=1.0,
+        ge=0.0,
+        le=1.0,
+        description="Datamodel health score where 1.0 is fully healthy.",
+    )
 
 
 class EnvironmentProfile(BaseModel):
