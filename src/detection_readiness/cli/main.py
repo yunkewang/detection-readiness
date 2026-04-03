@@ -12,6 +12,7 @@ from rich.table import Table
 
 from detection_readiness.ai.narrative import NarrativeError, generate_narrative_summary
 from detection_readiness.content_factory.spl_generator import generate_spl
+from detection_readiness.discovery.field_discovery import discover_fields_from_events
 from detection_readiness.engine.assessor import assess
 from detection_readiness.explain.explainer import (
     generate_detailed_explanation,
@@ -338,6 +339,55 @@ def generate_live_profile_cmd(
     console.print(f"  Indexes     : {len(discovered.indexes)}")
     console.print(f"  Sourcetypes : {len(discovered.sourcetypes)}")
     console.print(f"  Datamodels  : {len(profile.datamodels)}")
+
+
+@app.command("discover-fields")
+def discover_fields_cmd(
+    events: Annotated[
+        Path,
+        typer.Option("--events", "-e", help="Path to sample events file (JSON, JSONL, CSV)"),
+    ],
+    output: Annotated[
+        str, typer.Option("--output", "-o", help="Output format: text or json")
+    ] = "text",
+    min_coverage: Annotated[
+        float,
+        typer.Option("--min-coverage", help="Only show fields with coverage >= this value"),
+    ] = 0.0,
+) -> None:
+    """Discover fields and coverage from sample events."""
+    try:
+        result = discover_fields_from_events(events)
+    except (FileNotFoundError, ValueError) as exc:
+        console.print(f"[red]Error:[/red] {exc}")
+        raise typer.Exit(code=1)
+
+    if output == "json":
+        console.print_json(result.model_dump_json(indent=2))
+        return
+
+    console.print()
+    console.print(f"[bold]Field Discovery Report[/bold]")
+    console.print(f"  Source : {result.source_file}")
+    console.print(f"  Events : {result.total_events}")
+    console.print()
+
+    table = Table(title="Discovered Fields")
+    table.add_column("Field", style="cyan")
+    table.add_column("Coverage", justify="right")
+    table.add_column("Count", justify="right")
+    table.add_column("Samples")
+    for f in result.fields:
+        if f.coverage < min_coverage:
+            continue
+        cov_color = "green" if f.coverage >= 0.9 else "yellow" if f.coverage >= 0.7 else "red"
+        table.add_row(
+            f.name,
+            f"[{cov_color}]{f.coverage:.0%}[/{cov_color}]",
+            str(f.occurrence_count),
+            ", ".join(f.sample_values[:3]) + ("..." if len(f.sample_values) > 3 else ""),
+        )
+    console.print(table)
 
 
 def _print_result(result: AssessmentResult) -> None:

@@ -1,0 +1,9 @@
+Image,ParentImage,CommandLine,User,Computer,ProcessId,ParentProcessId,Hashes
+C:\Windows\System32\cmd.exe,C:\Windows\explorer.exe,cmd.exe /c whoami,CONTOSO\alice,WS001,4512,1024,SHA256=abc123
+C:\Windows\System32\powershell.exe,C:\Windows\System32\cmd.exe,powershell.exe -enc SQBFAFg...,CONTOSO\alice,WS001,5100,4512,SHA256=def456
+C:\Windows\System32\net.exe,C:\Windows\System32\cmd.exe,net user /domain,CONTOSO\bob,WS002,6200,3300,SHA256=ghi789
+C:\Windows\Temp\malware.exe,C:\Windows\System32\cmd.exe,C:\Windows\Temp\malware.exe -install,CONTOSO\charlie,WS003,7100,2200,SHA256=jkl012
+C:\Windows\System32\schtasks.exe,C:\Windows\System32\powershell.exe,schtasks /create /tn persist /tr evil.exe,CONTOSO\dave,WS004,8200,5100,SHA256=mno345
+C:\Windows\System32\reg.exe,C:\Windows\System32\cmd.exe,reg add HKLM\Software\Run /v backdoor,CONTOSO\eve,WS005,9300,4400,SHA256=pqr678
+C:\Windows\System32\rundll32.exe,C:\Windows\explorer.exe,rundll32.exe shell32.dll Control_RunDLL,CONTOSO\frank,WS001,1050,1024,SHA256=stu901
+C:\Windows\System32\mshta.exe,C:\Windows\System32\cmd.exe,mshta vbscript:Execute("CreateObject(""Wscript.Shell"")"),CONTOSO\alice,WS001,1150,4512,SHA256=vwx234

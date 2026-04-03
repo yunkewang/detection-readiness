@@ -1,0 +1,54 @@
+id: privilege_escalation
+display_name: Privilege Escalation Detection
+description: >
+  Detects privilege escalation attempts where an adversary gains higher-level
+  permissions on a system, such as elevating from a standard user to
+  administrator or SYSTEM via token manipulation, exploits, or misconfigurations.
+
+required_data_sources:
+  - endpoint_process
+
+required_fields_by_source:
+  endpoint_process:
+    - process_name
+    - user
+    - command_line
+    - dest
+
+optional_fields_by_source:
+  endpoint_process:
+    - parent_process_name
+    - parent_process_id
+    - process_id
+    - integrity_level
+    - hash
+
+preferred_query_mode: datamodel
+fallback_query_mode: raw
+
+scoring_weights:
+  required_data_source: 30.0
+  required_fields: 35.0
+  optional_fields: 10.0
+  preferred_query_mode: 15.0
+  fallback_query_mode: 10.0
+
+remediation_guidance:
+  endpoint_process: >
+    Onboard endpoint process creation logs via Sysmon (Event ID 1) or EDR.
+    Ensure command line logging is enabled for full visibility into process
+    arguments used in escalation techniques.
+  process_name: >
+    Ensure process names are captured from the Image or process_name field.
+    Key processes to monitor include cmd.exe, powershell.exe, runas.exe, and
+    known LOLBins.
+  command_line: >
+    Full command line is critical. Enable command line process auditing via
+    GPO or Sysmon configuration. Look for patterns like token duplication,
+    named pipe impersonation, or service creation.
+  integrity_level: >
+    If available, capture the integrity level of processes. This enables
+    detection of transitions from Medium to High or System integrity.
+  user: >
+    Map the user field to detect unexpected privilege changes. Correlate
+    with known administrator accounts.

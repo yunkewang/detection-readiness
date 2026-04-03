@@ -19,7 +19,8 @@ This is **not** a chatbot, not a Splunk app, and not a generic AI wrapper. It is
 ## Features
 
 - **Environment profile input** — Describe your Splunk environment in YAML or JSON (data sources, indexes, fields, coverage, query modes, constraints)
-- **Detection family assessment** — Assess readiness against structured detection families (password spray, impossible travel, suspicious process execution, email impersonation, lateral movement, data exfiltration)
+- **Detection family assessment** — 7 built-in detection families (password spray, impossible travel, suspicious process execution, email impersonation, lateral movement, data exfiltration, privilege escalation)
+- **Sample event field discovery** — Auto-discover fields and coverage from JSON, JSONL, or CSV sample events
 - **Deterministic scoring** — Repeatable 0–100 scoring with clear status (ready / partially_ready / not_ready)
 - **Human-readable explanations** — Template-based short and detailed reports (no LLM dependency)
 - **Machine-readable JSON output** — Structured results for pipelines and integrations
@@ -84,6 +85,13 @@ detection-readiness generate-profile \
   --index bluebay_azure_entra \
   --sourcetype azure:aad:signin \
   --min-coverage 0.6
+```
+
+### Discover fields from sample events
+
+```bash
+detection-readiness discover-fields \
+  --events examples/sample_events/azure_ad_signin.jsonl
 ```
 
 ### Explain a saved result
@@ -261,7 +269,13 @@ pytest tests/ -v
 - [x] Environment profile auto-generation (CLI: `generate-profile`)
 - [x] Content factory integration (generate SPL from readiness results)
 - [x] AI-generated narrative summaries (optional)
-- [x] Additional detection families (lateral movement, data exfiltration, etc.)
+- [x] Additional detection families (lateral movement, data exfiltration, privilege escalation)
+- [ ] Batch assessment across multiple families
+- [ ] Profile diffing (compare two environments)
+- [ ] MITRE ATT&CK mapping for detection families
+- [ ] Splunk-side sample event export helper
+- [ ] Interactive profile builder wizard
+- [ ] CI/CD integration (readiness gates for detection pipelines)
 
 ## License
 
