@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import csv
 from pathlib import Path
 from typing import Any
 
@@ -21,11 +22,12 @@ def _is_present(value: Any) -> bool:
 
 
 def load_events(path: str | Path) -> list[dict[str, Any]]:
-    """Load events from JSON/JSONL input.
+    """Load events from JSON, JSONL, or CSV input.
 
     Supports either:
       * JSON Lines where each line is an event object
       * A JSON array of event objects
+      * A CSV file with headers
     """
     file_path = Path(path)
     if not file_path.exists():
@@ -35,11 +37,22 @@ def load_events(path: str | Path) -> list[dict[str, Any]]:
     if not text:
         raise ValueError("Events file is empty")
 
-    if file_path.suffix.lower() == ".json":
+    suffix = file_path.suffix.lower()
+
+    if suffix == ".json":
         data = json.loads(text)
         if not isinstance(data, list) or not all(isinstance(item, dict) for item in data):
             raise ValueError("JSON input must be an array of objects")
         return data
+
+    if suffix == ".csv":
+        reader = csv.DictReader(text.splitlines())
+        if not reader.fieldnames:
+            raise ValueError("CSV input must include a header row")
+        events = [dict(row) for row in reader]
+        if not events:
+            raise ValueError("No events were found in input")
+        return events
 
     events: list[dict[str, Any]] = []
     for line in text.splitlines():
