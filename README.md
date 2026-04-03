@@ -23,6 +23,9 @@ This is **not** a chatbot, not a Splunk app, and not a generic AI wrapper. It is
 - **Deterministic scoring** — Repeatable 0–100 scoring with clear status (ready / partially_ready / not_ready)
 - **Human-readable explanations** — Template-based short and detailed reports (no LLM dependency)
 - **Machine-readable JSON output** — Structured results for pipelines and integrations
+- **Splunk REST live profile generation** — Build baseline profiles from Splunk management API metadata
+- **Content factory starter SPL generation** — Generate starter SPL from readiness output
+- **Optional AI narrative summaries** — Deterministic fallback + OpenAI-backed summaries (when configured)
 - **Extensible** — Add new detection families as YAML files; no code changes needed
 
 ## Installation
@@ -87,6 +90,33 @@ detection-readiness generate-profile \
 
 ```bash
 detection-readiness explain --input outputs/password_spray_azure.json
+```
+
+### Generate starter SPL from an assessment result
+
+```bash
+detection-readiness generate-spl \
+  --input outputs/password_spray_azure.json \
+  --output outputs/password_spray_azure.spl
+```
+
+### Generate a narrative summary (deterministic or OpenAI-backed)
+
+```bash
+detection-readiness summarize \
+  --input outputs/password_spray_azure.json \
+  --provider deterministic
+```
+
+### Auto-generate profile from Splunk REST API metadata
+
+```bash
+detection-readiness generate-live-profile \
+  --host splunk.company.local \
+  --token "$SPLUNK_BEARER_TOKEN" \
+  --output outputs/live_profile.yaml \
+  --environment-name customer_live \
+  --data-source splunk_live
 ```
 
 ## Example Environment Profile
@@ -218,20 +248,19 @@ pytest tests/ -v
 
 ## Current Limitations
 
-- No direct Splunk API integration (profiles are manually authored)
+- Splunk REST integration currently profiles indexes, sourcetypes, and datamodel availability only (field-level coverage still requires samples/manual tuning)
 - Sample event scanning supports JSON, JSONL, and CSV inputs (no direct Splunk export adapters yet)
-- Explanation generation is template-based (no AI narratives)
+- AI narratives are optional and require API configuration; deterministic summaries remain default-safe
 - No web UI
-- No direct Splunk content factory integration yet
 
 ## Roadmap
 
-- [ ] Splunk REST API integration for live environment profiling
+- [x] Splunk REST API integration for live environment profiling
 - [x] Sample-event-based field discovery (JSON/JSONL-driven coverage inference)
 - [x] Datamodel health checks
 - [x] Environment profile auto-generation (CLI: `generate-profile`)
-- [ ] Content factory integration (generate SPL from readiness results)
-- [ ] AI-generated narrative summaries (optional)
+- [x] Content factory integration (generate SPL from readiness results)
+- [x] AI-generated narrative summaries (optional)
 - [x] Additional detection families (lateral movement, data exfiltration, etc.)
 
 ## License
