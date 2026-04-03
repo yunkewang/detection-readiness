@@ -1,0 +1,37 @@
+id: data_exfiltration
+display_name: Data Exfiltration Detection
+description: Detects suspicious high-volume data transfer and anomalous cloud egress behavior.
+required_data_sources:
+  - proxy_egress
+  - cloud_storage_audit
+required_fields_by_source:
+  proxy_egress:
+    - user
+    - src_ip
+    - dest_domain
+    - bytes_out
+    - action
+  cloud_storage_audit:
+    - user
+    - operation
+    - object
+    - bytes
+optional_fields_by_source:
+  proxy_egress:
+    - user_agent
+    - category
+  cloud_storage_audit:
+    - source_host
+    - geo
+preferred_query_mode: raw
+fallback_query_mode: datamodel
+scoring_weights:
+  required_data_source: 30.0
+  required_fields: 35.0
+  optional_fields: 10.0
+  preferred_query_mode: 15.0
+  fallback_query_mode: 10.0
+remediation_guidance:
+  proxy_egress: Ingest secure web gateway/proxy logs with egress byte counts.
+  cloud_storage_audit: Enable cloud storage audit logging for object operations and bytes transferred.
+  datamodel: Map egress telemetry into Network Traffic datamodel for tstats-based detections.

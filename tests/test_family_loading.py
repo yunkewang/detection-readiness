@@ -34,10 +34,24 @@ def test_load_email_impersonation():
     assert fam.preferred_query_mode == "raw"
 
 
+def test_load_lateral_movement():
+    fam = load_family("lateral_movement", families_dir=FAMILIES_DIR)
+    assert fam.id == "lateral_movement"
+    assert "endpoint_process" in fam.required_data_sources
+
+
+def test_load_data_exfiltration():
+    fam = load_family("data_exfiltration", families_dir=FAMILIES_DIR)
+    assert fam.id == "data_exfiltration"
+    assert "proxy_egress" in fam.required_data_sources
+
+
 def test_list_all_families():
     families = list_families(families_dir=FAMILIES_DIR)
     ids = {f.id for f in families}
     assert ids == {
+        "data_exfiltration",
+        "lateral_movement",
         "password_spray",
         "impossible_travel",
         "suspicious_process_execution",

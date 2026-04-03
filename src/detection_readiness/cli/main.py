@@ -23,6 +23,7 @@ from detection_readiness.loaders.event_profile_generator import (
 from detection_readiness.loaders.family_loader import list_families, load_family
 from detection_readiness.loaders.profile_loader import load_profile
 from detection_readiness.schemas.result import AssessmentResult
+from detection_readiness.scoring.datamodel_health import evaluate_datamodel_health
 
 app = typer.Typer(
     name="detection-readiness",
@@ -168,6 +169,40 @@ def validate_profile_cmd(
     console.print(f"  Constraints  : {len(env.constraints)}")
     console.print(f"  Notes        : {len(env.notes)}")
 
+
+@app.command("check-datamodels")
+def check_datamodels_cmd(
+    profile: Annotated[
+        Path, typer.Option("--profile", "-p", help="Path to environment profile YAML/JSON")
+    ],
+) -> None:
+    """Run datamodel health checks and print findings."""
+    try:
+        env = load_profile(profile)
+    except (FileNotFoundError, ValueError) as exc:
+        console.print(f"[red]Datamodel health check failed:[/red] {exc}")
+        raise typer.Exit(code=1)
+
+    warnings, blockers = evaluate_datamodel_health(env)
+    console.print("[bold]Datamodel Health Check[/bold]")
+    console.print(f"  Environment : {env.environment_name}")
+    console.print(f"  Datamodels  : {len(env.datamodels)}")
+    console.print()
+
+    if blockers:
+        console.print("[red bold]Blockers:[/red bold]")
+        for blocker in blockers:
+            console.print(f"  ! {blocker}")
+        console.print()
+
+    if warnings:
+        console.print("[yellow bold]Warnings:[/yellow bold]")
+        for warning in warnings:
+            console.print(f"  ~ {warning}")
+        console.print()
+
+    if not blockers and not warnings:
+        console.print("[green]All datamodels look healthy.[/green]")
 
 @app.command()
 def explain(

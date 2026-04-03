@@ -11,6 +11,7 @@ from detection_readiness.schemas.result import (
     FieldReadiness,
     ReadinessStatus,
 )
+from detection_readiness.scoring.datamodel_health import evaluate_datamodel_health
 
 # Coverage threshold below which a required field is considered a blocker
 COVERAGE_THRESHOLD = 0.70
@@ -189,6 +190,14 @@ def evaluate(
             f"Neither preferred ('{family.preferred_query_mode}') nor fallback "
             f"('{family.fallback_query_mode}') query mode is available."
         )
+
+    if (
+        breakdown.recommended_query_strategy == "datamodel"
+        or family.preferred_query_mode == "datamodel"
+    ):
+        dm_warnings, dm_blockers = evaluate_datamodel_health(profile)
+        breakdown.warnings.extend(dm_warnings)
+        breakdown.blockers.extend(dm_blockers)
 
     # --- 4. Constraints-based assumptions ---
     if profile.constraints.get("preserve_original_field_names"):
