@@ -1,0 +1,3 @@
+{"UserPrincipalName":"alice@bluebay.com","ipAddress":"1.1.1.1","ResultType":"0","AppDisplayName":"Office 365","userAgent":"Mozilla/5.0"}
+{"UserPrincipalName":"bob@bluebay.com","ipAddress":"2.2.2.2","ResultType":"50126","AppDisplayName":"Office 365"}
+{"UserPrincipalName":"carol@bluebay.com","ipAddress":"3.3.3.3","ResultType":"0"}

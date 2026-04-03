@@ -64,6 +64,19 @@ detection-readiness list-families
 detection-readiness validate-profile --profile examples/azure_profile.yaml
 ```
 
+### Auto-generate a profile from sample events
+
+```bash
+detection-readiness generate-profile \
+  --events examples/azure_signin_sample.jsonl \
+  --output outputs/generated_profile.yaml \
+  --environment-name bluebay_autogen \
+  --data-source azure_ad_signin \
+  --index bluebay_azure_entra \
+  --sourcetype azure:aad:signin \
+  --min-coverage 0.6
+```
+
 ### Explain a saved result
 
 ```bash
@@ -200,7 +213,7 @@ pytest tests/ -v
 ## Current Limitations
 
 - No direct Splunk API integration (profiles are manually authored)
-- No sample event scanning or field auto-discovery
+- Sample event scanning supports only JSON/JSONL inputs (no direct Splunk export adapters yet)
 - Explanation generation is template-based (no AI narratives)
 - No web UI
 - Limited to four starter detection families
@@ -208,9 +221,9 @@ pytest tests/ -v
 ## Roadmap
 
 - [ ] Splunk REST API integration for live environment profiling
-- [ ] Sample-event-based field discovery
+- [x] Sample-event-based field discovery (JSON/JSONL-driven coverage inference)
 - [ ] Datamodel health checks
-- [ ] Environment profile auto-generation
+- [x] Environment profile auto-generation (CLI: `generate-profile`)
 - [ ] Content factory integration (generate SPL from readiness results)
 - [ ] AI-generated narrative summaries (optional)
 - [ ] Additional detection families (lateral movement, data exfiltration, etc.)
