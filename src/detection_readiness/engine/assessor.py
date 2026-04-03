@@ -71,6 +71,7 @@ def assess(
         assumptions=breakdown.assumptions,
         recommended_query_strategy=breakdown.recommended_query_strategy,
         remediation_suggestions=unique_remediation,
+        dependency_summary=breakdown.dependency_summary,
     )
 
     result.short_explanation = generate_short_explanation(result)

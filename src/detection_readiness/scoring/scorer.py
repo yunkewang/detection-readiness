@@ -8,6 +8,7 @@ from detection_readiness.schemas.environment import EnvironmentProfile
 from detection_readiness.schemas.family import DetectionFamily
 from detection_readiness.schemas.result import (
     DataSourceReadiness,
+    DependencySummary,
     FieldReadiness,
     ReadinessStatus,
 )
@@ -32,6 +33,7 @@ class ScoreBreakdown:
     assumptions: list[str] = field(default_factory=list)
     data_source_results: list[DataSourceReadiness] = field(default_factory=list)
     recommended_query_strategy: str | None = None
+    dependency_summary: DependencySummary | None = None
 
 
 def classify_status(
@@ -60,6 +62,14 @@ def evaluate(
 
     Returns a ``ScoreBreakdown`` with earned/possible points, blockers,
     warnings, assumptions, and per-source readiness details.
+
+    Dependency-aware scoring is activated when:
+    1. The family declares execution dependencies **and**
+    2. ``family.scoring_weights.dependency_completeness > 0``
+
+    When dependency_completeness == 0 (the default for all v0.1 families),
+    dependency issues are still reported as blockers/warnings but do not
+    affect the numeric score, preserving backward compatibility.
     """
     weights = family.scoring_weights
     breakdown = ScoreBreakdown()
@@ -215,10 +225,66 @@ def evaluate(
                 f"'{family.fallback_query_mode}' due to 'avoid_datamodel' constraint."
             )
 
-    # --- 5. Remediation ---
+    # --- 5. Knowledge object dependency scoring (v0.2) ---
+    _evaluate_dependencies(profile, family, breakdown)
+
+    # --- 6. Remediation ---
     # Remediation suggestions are attached by the engine layer based on blockers.
 
     return breakdown
+
+
+def _evaluate_dependencies(
+    profile: EnvironmentProfile,
+    family: DetectionFamily,
+    breakdown: ScoreBreakdown,
+) -> None:
+    """Resolve execution dependencies and update breakdown in place.
+
+    Imports are deferred to avoid circular imports and keep startup cheap
+    when the dependency engine is not used.
+    """
+    from detection_readiness.dependencies.resolver import (
+        build_blockers_from_summary,
+        build_warnings_from_summary,
+        compute_dependency_completeness,
+        resolve_dependencies,
+    )
+
+    deps = family.execution_dependencies
+    has_deps = bool(
+        deps.required_macros or deps.optional_macros
+        or deps.required_eventtypes or deps.optional_eventtypes
+        or deps.required_lookups or deps.optional_lookups
+        or deps.required_mltk_models or deps.optional_mltk_models
+        or deps.required_saved_searches or deps.optional_saved_searches
+        or deps.required_datamodel_objects
+        or deps.spl_template
+    )
+
+    if not has_deps:
+        # No dependencies declared; nothing to do.
+        return
+
+    summary = resolve_dependencies(family, profile.knowledge_objects)
+    breakdown.dependency_summary = summary
+
+    # Convert resolution to blockers / warnings
+    breakdown.blockers.extend(build_blockers_from_summary(summary))
+    breakdown.warnings.extend(build_warnings_from_summary(summary))
+
+    # Optionally score dependency completeness when weight > 0
+    weight = family.scoring_weights.dependency_completeness
+    if weight > 0:
+        breakdown.possible += weight
+        completeness = compute_dependency_completeness(summary)
+        breakdown.earned += weight * completeness
+
+        if completeness < 1.0 and breakdown.recommended_query_strategy:
+            breakdown.warnings.append(
+                f"SPL can only run in {breakdown.recommended_query_strategy!r} mode "
+                "because one or more dependencies are unresolved or unhealthy."
+            )
 
 
 def _check_query_mode(
