@@ -72,7 +72,9 @@ def assess_cmd(
 def generate_profile_cmd(
     events: Annotated[
         Path,
-        typer.Option("--events", "-e", help="Path to sample events (JSONL or JSON array)"),
+        typer.Option(
+            "--events", "-e", help="Path to sample events (JSONL, JSON array, or CSV)"
+        ),
     ],
     output: Annotated[
         Path,

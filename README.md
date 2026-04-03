@@ -213,7 +213,7 @@ pytest tests/ -v
 ## Current Limitations
 
 - No direct Splunk API integration (profiles are manually authored)
-- Sample event scanning supports only JSON/JSONL inputs (no direct Splunk export adapters yet)
+- Sample event scanning supports JSON, JSONL, and CSV inputs (no direct Splunk export adapters yet)
 - Explanation generation is template-based (no AI narratives)
 - No web UI
 - Limited to four starter detection families

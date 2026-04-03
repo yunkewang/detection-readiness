@@ -70,3 +70,13 @@ def test_load_events_from_json_array(tmp_path: Path):
     events = load_events(events_path)
     assert len(events) == 2
     assert events[1]["b"] == 3
+
+
+def test_load_events_from_csv(tmp_path: Path):
+    events_path = tmp_path / "events.csv"
+    events_path.write_text("user,src_ip,result\nalice,1.1.1.1,success\nbob,,failure\n")
+
+    events = load_events(events_path)
+    assert len(events) == 2
+    assert events[0]["user"] == "alice"
+    assert events[1]["src_ip"] == ""
