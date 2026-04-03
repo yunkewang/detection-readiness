@@ -15,6 +15,11 @@ from detection_readiness.explain.explainer import (
     generate_detailed_explanation,
     generate_short_explanation,
 )
+from detection_readiness.loaders.event_profile_generator import (
+    build_profile,
+    load_events,
+    write_profile,
+)
 from detection_readiness.loaders.family_loader import list_families, load_family
 from detection_readiness.loaders.profile_loader import load_profile
 from detection_readiness.schemas.result import AssessmentResult
@@ -62,6 +67,62 @@ def assess_cmd(
         console.print_json(result.model_dump_json(indent=2))
     else:
         _print_result(result)
+
+@app.command("generate-profile")
+def generate_profile_cmd(
+    events: Annotated[
+        Path,
+        typer.Option("--events", "-e", help="Path to sample events (JSONL or JSON array)"),
+    ],
+    output: Annotated[
+        Path,
+        typer.Option("--output", "-o", help="Destination profile (.yaml/.yml/.json)"),
+    ],
+    environment_name: Annotated[
+        str,
+        typer.Option("--environment-name", help="Environment name for generated profile"),
+    ] = "auto_generated",
+    data_source: Annotated[
+        str, typer.Option("--data-source", help="Data source id to create")
+    ] = "sample_source",
+    index: Annotated[
+        str, typer.Option("--index", help="Primary index for sample events")
+    ] = "main",
+    sourcetype: Annotated[
+        str, typer.Option("--sourcetype", help="Primary sourcetype for sample events")
+    ] = "unknown",
+    min_coverage: Annotated[
+        float,
+        typer.Option(
+            "--min-coverage",
+            min=0.0,
+            max=1.0,
+            help="Only include fields with at least this coverage",
+        ),
+    ] = 0.5,
+) -> None:
+    """Generate an environment profile from sample events."""
+    try:
+        sample_events = load_events(events)
+        profile = build_profile(
+            environment_name=environment_name,
+            data_source_id=data_source,
+            index=index,
+            sourcetype=sourcetype,
+            events=sample_events,
+            min_coverage=min_coverage,
+        )
+        write_profile(profile, output)
+    except (FileNotFoundError, ValueError, json.JSONDecodeError) as exc:
+        console.print(f"[red]Profile generation failed:[/red] {exc}")
+        raise typer.Exit(code=1)
+
+    inferred_fields = len(profile.data_sources[data_source].fields)
+    console.print(f"[green]Generated profile:[/green] {output}")
+    console.print(f"  Environment : {profile.environment_name}")
+    console.print(f"  Data source : {data_source}")
+    console.print(f"  Sample events: {len(sample_events)}")
+    console.print(f"  Fields kept : {inferred_fields} (min coverage: {min_coverage:.2f})")
 
 
 @app.command("list-families")

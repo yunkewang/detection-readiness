@@ -83,3 +83,26 @@ def test_assess_bad_family():
         ],
     )
     assert result.exit_code == 1
+
+
+def test_generate_profile(tmp_path):
+    events = tmp_path / "events.jsonl"
+    output = tmp_path / "generated.yaml"
+    events.write_text('{"user":"alice","src_ip":"1.1.1.1"}\n{"user":"bob"}\n')
+
+    result = runner.invoke(
+        app,
+        [
+            "generate-profile",
+            "--events", str(events),
+            "--output", str(output),
+            "--environment-name", "autogen",
+            "--data-source", "azure_ad_signin",
+            "--index", "idx_auth",
+            "--sourcetype", "azure:aad:signin",
+            "--min-coverage", "0.5",
+        ],
+    )
+    assert result.exit_code == 0
+    assert "Generated profile" in result.output
+    assert output.exists()
