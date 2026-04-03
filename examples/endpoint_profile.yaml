@@ -1,0 +1,43 @@
+environment_name: ironforge
+data_sources:
+  endpoint_process:
+    indexes:
+      - ironforge_edr
+      - ironforge_sysmon
+    sourcetypes:
+      - xmlwineventlog:microsoft-windows-sysmon/operational
+      - crowdstrike:events:sensor
+    fields:
+      process_name:
+        candidates: [Image, process_name, OriginalFileName]
+        coverage: 0.98
+      parent_process_name:
+        candidates: [ParentImage, parent_process_name]
+        coverage: 0.96
+      command_line:
+        candidates: [CommandLine, command_line]
+        coverage: 0.94
+      user:
+        candidates: [User, user, src_user]
+        coverage: 0.91
+      dest:
+        candidates: [Computer, dest, host]
+        coverage: 0.93
+      process_id:
+        candidates: [ProcessId, process_id]
+        coverage: 0.97
+      hash:
+        candidates: [Hashes, file_hash]
+        coverage: 0.80
+    query_modes:
+      raw: true
+      datamodel: true
+datamodels:
+  endpoint:
+    available: true
+constraints:
+  preserve_original_field_names: false
+notes:
+  - Sysmon and CrowdStrike data both onboarded
+  - Endpoint datamodel is accelerated
+  - CIM normalization is in place for process events

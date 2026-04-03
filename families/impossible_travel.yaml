@@ -1,0 +1,42 @@
+id: impossible_travel
+display_name: Impossible Travel Detection
+description: >
+  Detects scenarios where a user authenticates from two geographically distant
+  locations in a timeframe that would be impossible by normal travel.
+
+required_data_sources:
+  - azure_ad_signin
+
+required_fields_by_source:
+  azure_ad_signin:
+    - user
+    - src_ip
+    - location
+
+optional_fields_by_source:
+  azure_ad_signin:
+    - app
+    - user_agent
+    - result
+
+preferred_query_mode: datamodel
+fallback_query_mode: raw
+
+scoring_weights:
+  required_data_source: 30.0
+  required_fields: 35.0
+  optional_fields: 10.0
+  preferred_query_mode: 15.0
+  fallback_query_mode: 10.0
+
+remediation_guidance:
+  azure_ad_signin: >
+    Onboard Azure AD sign-in logs. Ensure location data (city, state, country,
+    latitude, longitude) is captured in events.
+  location: >
+    Azure AD sign-in events include location data in the Location field.
+    Ensure this is parsed and available for geo-distance calculations.
+  user: >
+    Map user identity from UserPrincipalName or related fields.
+  src_ip: >
+    Ensure source IP is available for correlating authentication events.
