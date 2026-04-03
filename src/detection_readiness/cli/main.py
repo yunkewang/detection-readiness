@@ -10,10 +10,17 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
+from detection_readiness.ai.narrative import NarrativeError, generate_narrative_summary
+from detection_readiness.content_factory.spl_generator import generate_spl
 from detection_readiness.engine.assessor import assess
 from detection_readiness.explain.explainer import (
     generate_detailed_explanation,
     generate_short_explanation,
+)
+from detection_readiness.integrations.splunk_rest import (
+    SplunkConnectionSettings,
+    SplunkRestError,
+    build_profile_from_splunk,
 )
 from detection_readiness.loaders.event_profile_generator import (
     build_profile,
@@ -224,6 +231,113 @@ def explain(
 
     console.print()
     console.print(result.detailed_explanation)
+
+
+@app.command("generate-spl")
+def generate_spl_cmd(
+    input: Annotated[
+        Path, typer.Option("--input", "-i", help="Path to assessment result JSON")
+    ],
+    output: Annotated[
+        Optional[Path], typer.Option("--output", "-o", help="Optional output .spl file")
+    ] = None,
+) -> None:
+    """Generate starter SPL from readiness assessment output."""
+    if not input.exists():
+        console.print(f"[red]File not found:[/red] {input}")
+        raise typer.Exit(code=1)
+
+    data = json.loads(input.read_text(encoding="utf-8"))
+    result = AssessmentResult.model_validate(data)
+    spl = generate_spl(result)
+
+    if output:
+        output.write_text(spl + "\n", encoding="utf-8")
+        console.print(f"[green]Generated SPL:[/green] {output}")
+    else:
+        console.print(spl)
+
+
+@app.command("summarize")
+def summarize_cmd(
+    input: Annotated[
+        Path, typer.Option("--input", "-i", help="Path to assessment result JSON")
+    ],
+    provider: Annotated[
+        str, typer.Option("--provider", help="Narrative provider (openai|deterministic)")
+    ] = "openai",
+    model: Annotated[
+        str, typer.Option("--model", help="Model name when provider=openai")
+    ] = "gpt-4.1-mini",
+) -> None:
+    """Generate an optional narrative summary from an assessment result."""
+    if not input.exists():
+        console.print(f"[red]File not found:[/red] {input}")
+        raise typer.Exit(code=1)
+
+    data = json.loads(input.read_text(encoding="utf-8"))
+    result = AssessmentResult.model_validate(data)
+    actual_provider = "deterministic" if provider == "deterministic" else "openai"
+
+    try:
+        summary = generate_narrative_summary(
+            result,
+            provider=actual_provider,
+            model=model,
+        )
+    except NarrativeError as exc:
+        console.print(f"[red]Summary generation failed:[/red] {exc}")
+        raise typer.Exit(code=1)
+
+    console.print(summary)
+
+
+@app.command("generate-live-profile")
+def generate_live_profile_cmd(
+    host: Annotated[str, typer.Option("--host", help="Splunk management host, e.g. splunk.local")],
+    token: Annotated[str, typer.Option("--token", help="Splunk bearer token")],
+    output: Annotated[
+        Path,
+        typer.Option("--output", "-o", help="Destination profile (.yaml/.yml/.json)"),
+    ],
+    environment_name: Annotated[
+        str, typer.Option("--environment-name", help="Environment name in generated profile")
+    ] = "splunk_live",
+    data_source: Annotated[
+        str, typer.Option("--data-source", help="Data source id to create")
+    ] = "splunk_live",
+    port: Annotated[int, typer.Option("--port", help="Splunk management port")] = 8089,
+    scheme: Annotated[str, typer.Option("--scheme", help="http or https")] = "https",
+    verify_ssl: Annotated[
+        bool, typer.Option("--verify-ssl/--no-verify-ssl", help="Enable TLS certificate validation")
+    ] = True,
+) -> None:
+    """Generate an environment profile by querying Splunk REST endpoints."""
+    settings = SplunkConnectionSettings(
+        host=host,
+        token=token,
+        port=port,
+        scheme=scheme,
+        verify_ssl=verify_ssl,
+    )
+    try:
+        profile = build_profile_from_splunk(
+            settings,
+            environment_name=environment_name,
+            data_source_id=data_source,
+        )
+        write_profile(profile, output)
+    except SplunkRestError as exc:
+        console.print(f"[red]Live profile generation failed:[/red] {exc}")
+        raise typer.Exit(code=1)
+
+    console.print(f"[green]Generated live profile:[/green] {output}")
+    console.print(f"  Environment : {profile.environment_name}")
+    console.print(f"  Data source : {data_source}")
+    discovered = profile.data_sources[data_source]
+    console.print(f"  Indexes     : {len(discovered.indexes)}")
+    console.print(f"  Sourcetypes : {len(discovered.sourcetypes)}")
+    console.print(f"  Datamodels  : {len(profile.datamodels)}")
 
 
 def _print_result(result: AssessmentResult) -> None:

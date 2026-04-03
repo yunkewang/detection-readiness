@@ -118,3 +118,52 @@ def test_generate_profile(tmp_path):
     assert result.exit_code == 0
     assert "Generated profile" in result.output
     assert output.exists()
+
+
+def test_generate_spl(tmp_path):
+    assess_output = runner.invoke(
+        app,
+        [
+            "assess-cmd",
+            "--profile", str(EXAMPLES_DIR / "azure_profile.yaml"),
+            "--family", "password_spray",
+            "--output", "json",
+            "--families-dir", str(FAMILIES_DIR),
+        ],
+    )
+    assert assess_output.exit_code == 0
+
+    result_file = tmp_path / "result.json"
+    result_file.write_text(assess_output.stdout)
+    spl_file = tmp_path / "generated.spl"
+
+    result = runner.invoke(
+        app,
+        ["generate-spl", "--input", str(result_file), "--output", str(spl_file)],
+    )
+    assert result.exit_code == 0
+    assert spl_file.exists()
+    assert "search index=" in spl_file.read_text()
+
+
+def test_summarize_deterministic(tmp_path):
+    assess_output = runner.invoke(
+        app,
+        [
+            "assess-cmd",
+            "--profile", str(EXAMPLES_DIR / "azure_profile.yaml"),
+            "--family", "password_spray",
+            "--output", "json",
+            "--families-dir", str(FAMILIES_DIR),
+        ],
+    )
+    assert assess_output.exit_code == 0
+
+    result_file = tmp_path / "result.json"
+    result_file.write_text(assess_output.stdout)
+    summary = runner.invoke(
+        app,
+        ["summarize", "--input", str(result_file), "--provider", "deterministic"],
+    )
+    assert summary.exit_code == 0
+    assert "readiness" in summary.stdout.lower()
