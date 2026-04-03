@@ -1,0 +1,46 @@
+id: suspicious_process_execution
+display_name: Suspicious Process Execution Detection
+description: >
+  Detects execution of suspicious or known-malicious processes based on process
+  creation events from endpoint telemetry such as Sysmon or EDR data.
+
+required_data_sources:
+  - endpoint_process
+
+required_fields_by_source:
+  endpoint_process:
+    - process_name
+    - parent_process_name
+    - command_line
+    - user
+
+optional_fields_by_source:
+  endpoint_process:
+    - process_id
+    - parent_process_id
+    - dest
+    - hash
+
+preferred_query_mode: datamodel
+fallback_query_mode: raw
+
+scoring_weights:
+  required_data_source: 30.0
+  required_fields: 35.0
+  optional_fields: 10.0
+  preferred_query_mode: 15.0
+  fallback_query_mode: 10.0
+
+remediation_guidance:
+  endpoint_process: >
+    Onboard endpoint process creation logs via Sysmon (Event ID 1),
+    CrowdStrike, or similar EDR. Ensure the Endpoint datamodel is accelerated.
+  process_name: >
+    Ensure the process name field is parsed from Image or process_name fields
+    in the raw events.
+  parent_process_name: >
+    Ensure parent process information is captured. Sysmon Event ID 1 provides
+    ParentImage and ParentCommandLine.
+  command_line: >
+    Full command line is critical for detection. Ensure command line logging
+    is enabled in Sysmon or GPO settings.

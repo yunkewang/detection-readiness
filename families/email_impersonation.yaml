@@ -1,0 +1,43 @@
+id: email_impersonation
+display_name: Email Impersonation Detection
+description: >
+  Detects email impersonation attacks where a sender spoofs the display name
+  or address of a trusted contact, often targeting executives or finance teams.
+
+required_data_sources:
+  - o365_email
+
+required_fields_by_source:
+  o365_email:
+    - sender
+    - recipient
+    - subject
+
+optional_fields_by_source:
+  o365_email:
+    - sender_domain
+    - return_path
+    - message_id
+    - attachment_count
+
+preferred_query_mode: raw
+fallback_query_mode: raw
+
+scoring_weights:
+  required_data_source: 30.0
+  required_fields: 35.0
+  optional_fields: 10.0
+  preferred_query_mode: 15.0
+  fallback_query_mode: 10.0
+
+remediation_guidance:
+  o365_email: >
+    Onboard Office 365 Message Trace logs via the Splunk Add-on for Microsoft
+    Office 365. Ensure MessageTrace or MailDetailReport data is collected.
+  sender: >
+    Map the sender address from SenderAddress or P2SenderDomain fields.
+  recipient: >
+    Map the recipient from RecipientAddress field in message trace data.
+  subject: >
+    Ensure the Subject field is present in the email logs for content-based
+    detection rules.

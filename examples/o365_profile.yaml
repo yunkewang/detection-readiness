@@ -1,0 +1,51 @@
+environment_name: northwind
+data_sources:
+  o365_email:
+    indexes:
+      - northwind_o365
+    sourcetypes:
+      - o365:management:activity
+    fields:
+      sender:
+        candidates: [SenderAddress, UserId]
+        coverage: 0.97
+      recipient:
+        candidates: [RecipientAddress]
+        coverage: 0.95
+      subject:
+        candidates: [Subject]
+        coverage: 0.90
+      sender_domain:
+        candidates: [SenderDomain, P2SenderDomain]
+        coverage: 0.88
+    query_modes:
+      raw: true
+      datamodel: false
+  azure_ad_signin:
+    indexes:
+      - northwind_azure
+    sourcetypes:
+      - azure:aad:signin
+    fields:
+      user:
+        candidates: [UserPrincipalName]
+        coverage: 0.92
+      src_ip:
+        candidates: [ipAddress]
+        coverage: 0.89
+      result:
+        candidates: [ResultType]
+        coverage: 0.85
+    query_modes:
+      raw: true
+      datamodel: false
+datamodels:
+  authentication:
+    available: false
+  email:
+    available: false
+constraints:
+  preserve_original_field_names: true
+notes:
+  - O365 and Azure AD data both available
+  - No datamodel acceleration configured

@@ -1,0 +1,32 @@
+environment_name: bluebay
+data_sources:
+  azure_ad_signin:
+    indexes:
+      - bluebay_azure_entra
+    sourcetypes:
+      - azure:aad:signin
+    fields:
+      user:
+        candidates: [UserPrincipalName, user, src_user]
+        coverage: 0.95
+      src_ip:
+        candidates: [ipAddress, src_ip]
+        coverage: 0.91
+      result:
+        candidates: [ResultType, action, status]
+        coverage: 0.88
+      app:
+        candidates: [AppDisplayName, app]
+        coverage: 0.84
+    query_modes:
+      raw: true
+      datamodel: false
+datamodels:
+  authentication:
+    available: false
+constraints:
+  preserve_original_field_names: true
+  avoid_datamodel: true
+notes:
+  - Customer uses raw searches for Azure detections
+  - No CIM normalization in place
